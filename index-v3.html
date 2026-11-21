@@ -316,6 +316,22 @@ body.snapping #catalog .card{pointer-events:none}
   .catsec h2{font-size:30px}.catdesc{margin-left:0}
   .search{width:100%}
 }
+/* ---------- catálogo a todo el ancho y ventana "Agregar objetos" ---------- */
+.app.inCat{grid-template-columns:minmax(0,1fr)}
+.app.inCat aside{display:none}
+body:not([data-tab="catalog"]) #addOpen{display:none}
+#addHelp .wlCard{width:min(640px,100%)}
+#addHelp .snip{margin:14px 0}
+
+/* ---------- celular: controles del visor 3D sin superponerse ---------- */
+@media (max-width:900px){
+  .app.inCat .stage{height:100dvh}
+  #viewBtns{left:12px;right:12px;top:10px;display:flex;gap:6px;padding:5px}
+  #viewBtns .btn{flex:1;padding:7px 4px}
+  #explodeBox{left:12px;right:12px;top:62px}
+  #explodeBox input{flex:1;width:auto;min-width:0}
+  #statsChip{left:12px;right:12px;bottom:10px;padding:6px 12px;font-size:11px;line-height:1.35}
+}
 @media (prefers-reduced-motion:reduce){ .card,.cta,.heroCircle img{transition:none} }
 </style>
 <script type="importmap">
@@ -338,6 +354,7 @@ body.snapping #catalog .card{pointer-events:none}
       </div>
       <label class="search" title="Buscar en el catálogo"><input id="qSearch" type="search" placeholder="Buscar objeto…" aria-label="Buscar en el catálogo" autocomplete="off"><i><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg></i></label>
       <button class="btn small" id="wlOpen" title="Ver la bienvenida" aria-haspopup="dialog">Bienvenida</button>
+      <button class="btn small" id="addOpen" title="Cómo agregar más objetos al catálogo" aria-haspopup="dialog">Agregar objetos</button>
     </div>
     <div class="viewport">
       <div id="viewCatalog">
@@ -416,22 +433,7 @@ body.snapping #catalog .card{pointer-events:none}
   </div>
 
   <aside>
-    <div id="asideCat">
-      <h3>Catálogo</h3>
-      <p style="color:var(--muted);font-size:13px;margin-top:0">Elige un objeto para ver su modelo 3D, definir sus medidas, exportar los planos de corte y armarlo con el asistente AR. Las medidas que guardes aparecen como ★ en su tarjeta.</p>
-      <details open><summary>Cómo agregar más objetos</summary><div class="body" style="font-size:13px;color:var(--muted)">
-        Cada objeto es una definición con sus parámetros y una función que devuelve las piezas (contorno, agujeros, espesor y ubicación 3D). Al registrarla aparece en el catálogo, con visor, planos y asistente AR.
-        <pre class="snip">Catalogo.registrar({
-  id:'mi-objeto', cat:'objetos',
-  nombre:'Mi objeto', desc:'Qué es',
-  defaults:{ espesor:6, sheet:'900x600' },
-  schema:[{ id:'ancho', label:'Ancho',
-            min:50, max:500, step:1, def:200 }],
-  build(P){ /* devuelve { parts, warn, dims } */ }
-});</pre>
-        La guía completa está en <code>GUIA_AGREGAR_OBJETOS.md</code>. Para sumar una categoría, agrégala a <code>Catalogo.CATEGORIAS</code>.
-      </div></details>
-    </div>
+    <div id="asideCat" hidden></div>
 
     <div id="asideObj" hidden>
       <div class="objHead"><button class="btn small" id="backCat">← Catálogo</button><div><b id="objName"></b><small id="objCat"></small></div></div>
@@ -483,6 +485,23 @@ body.snapping #catalog .card{pointer-events:none}
       </div></details>
     </div>
   </aside>
+</div>
+
+<div id="addHelp" class="wl" role="dialog" aria-modal="true" aria-labelledby="ahTitle" hidden>
+  <div class="wlCard">
+    <h2 id="ahTitle">Cómo agregar más objetos</h2>
+    <p class="wlLead">Cada objeto es una definición con sus parámetros y una función que devuelve las piezas (contorno, agujeros, espesor y ubicación 3D). Al registrarla aparece en el catálogo, con visor, planos y asistente AR.</p>
+    <pre class="snip">Catalogo.registrar({
+  id:'mi-objeto', cat:'objetos',
+  nombre:'Mi objeto', desc:'Qué es',
+  defaults:{ espesor:6, sheet:'900x600' },
+  schema:[{ id:'ancho', label:'Ancho',
+            min:50, max:500, step:1, def:200 }],
+  build(P){ /* devuelve { parts, warn, dims } */ }
+});</pre>
+    <p class="wlLead">La guía completa está en <code>GUIA_AGREGAR_OBJETOS.md</code>. Para sumar una categoría, agrégala a <code>Catalogo.CATEGORIAS</code>.</p>
+    <div class="wlFoot"><span></span><button class="btn primary" id="ahClose">Entendido</button></div>
+  </div>
 </div>
 
 <div id="welcome" class="wl" role="dialog" aria-modal="true" aria-labelledby="wlTitle" hidden>
@@ -1629,13 +1648,16 @@ function setView(name){
   const size = Math.max(state.size.x, state.size.y, state.size.z), c = state.box.getCenter(new THREE.Vector3());
   c.y = state.box.min.y + state.size.y*0.45; controls.target.copy(c);
   const dirs = { iso:[0.85,0.55,1.0], front:[0,0.12,1], side:[1,0.12,0], top:[0,1,0.001] };
-  const d = new THREE.Vector3(...dirs[name]).normalize().multiplyScalar(size*2.7);
+  const d = new THREE.Vector3(...dirs[name]).normalize().multiplyScalar(size*(window.matchMedia('(max-width:900px)').matches ? 3.25 : 2.7));
   camera.position.copy(controls.target).add(d);
   camera.near = Math.max(1, size*0.02); camera.far = Math.max(6000, size*40); camera.updateProjectionMatrix(); controls.update();
 }
 function resize3D(){
   const w = host3d.clientWidth, h = host3d.clientHeight; if (!w || !h) return;
-  renderer.setSize(w, h, false); camera.aspect = w/h; camera.updateProjectionMatrix();
+  renderer.setSize(w, h, false); camera.aspect = w/h;
+  /* celular: se baja el objeto en pantalla para que los controles de arriba no lo tapen (no aplica al asistente AR) */
+  if (window.matchMedia('(max-width:900px)').matches && !AR.active) camera.setViewOffset(w, h, 0, -48, w, h); else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
   if (AR.resize) AR.resize(w, h);
 }
 new ResizeObserver(resize3D).observe(host3d);
@@ -1855,7 +1877,8 @@ function showTab(tab){
   $('view3d').style.display = (cat || plan) ? 'none' : 'block';
   $('viewPlan').style.display = plan ? 'block' : 'none';
   document.querySelector('.app').classList.toggle('arOn', ar);
-  $('asideCat').hidden = !cat; $('asideObj').hidden = cat;
+  document.querySelector('.app').classList.toggle('inCat', cat);                 // el catálogo usa todo el ancho: sin panel lateral
+  $('asideCat').hidden = true; $('asideObj').hidden = cat;
   if (ar){ if (!AR.active) AR.enter(); } else if (AR.active) AR.leave();
   if (plan) fitPlan(); else if (!cat) resize3D();
 }
@@ -1879,7 +1902,7 @@ $('expPieceDXF').onclick = () => exportPiece('dxf'); $('expPieceSVG').onclick = 
 $('qSearch').oninput = e => { catQuery = e.target.value.trim().toLowerCase(); renderCatalog(); };
 $('heroGo').onclick = () => { $('viewCatalog').scrollTo({ top:$('catalog').offsetTop - 12, behavior:'smooth' }); };
 function shotOf(size, zoom){                                         // foto 3D del objeto abierto (PNG transparente)
-  const cv = renderer.domElement; renderer.setSize(size, size, false); camera.aspect = 1; camera.updateProjectionMatrix();
+  const cv = renderer.domElement; renderer.setSize(size, size, false); camera.aspect = 1; camera.clearViewOffset(); camera.updateProjectionMatrix();
   state.explode = state.explodeTarget = 0; applyExplode(); setView('iso');
   camera.position.lerp(controls.target, 1 - zoom); controls.update();
   renderer.render(scene, camera); return cv.toDataURL('image/png');
@@ -1920,6 +1943,18 @@ document.addEventListener('keydown', e => {
     const f = [$('wlNever'), $('wlGo')], i = f.indexOf(document.activeElement);
     if (e.shiftKey && i <= 0){ e.preventDefault(); f[f.length-1].focus(); } else if (!e.shiftKey && i === f.length-1){ e.preventDefault(); f[0].focus(); }
   }
+}, true);
+
+/* --- ventana "Cómo agregar más objetos" --- */
+let ahPrev = null;
+function openAddHelp(){ ahPrev = document.activeElement; $('addHelp').hidden = false; $('addHelp').querySelector('.wlCard').scrollTop = 0; $('ahClose').focus({ preventScroll:true }); }
+function closeAddHelp(){ $('addHelp').hidden = true; if (ahPrev && ahPrev.focus) ahPrev.focus(); }
+$('addOpen').onclick = openAddHelp; $('ahClose').onclick = closeAddHelp;
+$('addHelp').addEventListener('mousedown', e => { if (e.target === $('addHelp')) closeAddHelp(); });
+document.addEventListener('keydown', e => {
+  if ($('addHelp').hidden) return;
+  if (e.key === 'Escape'){ e.preventDefault(); closeAddHelp(); }
+  else if (e.key === 'Tab'){ e.preventDefault(); $('ahClose').focus(); }          // solo hay un control: el foco no sale de la ventana
 }, true);
 
 /* =====================================================================
