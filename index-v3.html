@@ -327,6 +327,10 @@ body.snapping #catalog .card{pointer-events:none}
 .app.inCat{grid-template-columns:minmax(0,1fr)}
 .app.inCat aside{display:none}
 body:not([data-tab="catalog"]) #addOpen{display:none}
+.devTag{margin-right:7px;color:var(--accent2);font:700 11.5px ui-monospace,Consolas,"Courier New",monospace;letter-spacing:0}
+.devBadge{display:inline-flex;align-items:center;gap:8px;margin:0 0 12px;padding:5px 14px;border-radius:99px;border:1px solid #f39b21;background:rgba(243,155,33,.1);color:var(--accent2);font:700 11px var(--fb);letter-spacing:.18em;text-transform:uppercase}
+.devBadge span{font:700 12px ui-monospace,Consolas,"Courier New",monospace;letter-spacing:0}
+.devNote{margin:8px 0 14px;padding:10px 14px;border-left:3px solid #f39b21;border-radius:0 12px 12px 0;background:#1d1f23;color:#d5cabb;font-size:13px;line-height:1.55}
 #addHelp .wlCard{width:min(640px,100%)}
 #addHelp .snip{margin:14px 0}
 
@@ -361,7 +365,7 @@ body:not([data-tab="catalog"]) #addOpen{display:none}
       </div>
       <label class="search" title="Buscar en el catálogo"><input id="qSearch" type="search" placeholder="Buscar objeto…" aria-label="Buscar en el catálogo" autocomplete="off"><i><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg></i></label>
       <button class="btn small" id="wlOpen" title="Ver la bienvenida" aria-haspopup="dialog">Bienvenida</button>
-      <button class="btn small" id="addOpen" title="Cómo agregar más objetos al catálogo" aria-haspopup="dialog">Agregar objetos</button>
+      <button class="btn small" id="addOpen" title="Espacio para desarrolladores: cómo agregar más objetos al catálogo" aria-haspopup="dialog"><span class="devTag" aria-hidden="true">&lt;/&gt;</span>Agregar objetos</button>
     </div>
     <div class="viewport">
       <div id="viewCatalog">
@@ -496,7 +500,9 @@ body:not([data-tab="catalog"]) #addOpen{display:none}
 
 <div id="addHelp" class="wl" role="dialog" aria-modal="true" aria-labelledby="ahTitle" hidden>
   <div class="wlCard">
+    <p class="devBadge"><span aria-hidden="true">&lt;/&gt;</span> Espacio para desarrolladores</p>
     <h2 id="ahTitle">Cómo agregar más objetos</h2>
+    <p class="devNote">Esta sección es para quien programa nuevos objetos del catálogo. No necesitas nada de esto para usar la aplicación.</p>
     <p class="wlLead">Cada objeto es una definición con sus parámetros y una función que devuelve las piezas (contorno, agujeros, espesor y ubicación 3D). Al registrarla aparece en el catálogo, con visor, planos y asistente AR.</p>
     <pre class="snip">Catalogo.registrar({
   id:'mi-objeto', cat:'objetos',
